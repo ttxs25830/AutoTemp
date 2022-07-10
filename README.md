@@ -26,7 +26,7 @@
 
 这时运行`python main.py`即可在命令行中运行本程序
 
-或先运行`python -m pyinstaller main.py -F`对本程序进行编译
+或先运行`pyinstaller main.py -F`对本程序进行编译
 
 编译后的可执行文件将存放在dist目录下
 
