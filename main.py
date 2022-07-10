@@ -9,6 +9,7 @@ from decimal import Decimal
 from json import load, dump
 from os.path import exists
 from sys import exit
+from datetime import date, datetime
 
 def check_or_creat_setting_file():
     if not exists("./setting.json"):
@@ -24,7 +25,8 @@ def check_or_creat_setting_file():
             "login_wait": 3,
             "wait_max": 15,
             "keyboard_wait": 0.5,
-            "fill_once": 3,
+            "start_time": [7,11,0],
+            "day_div": [10, 18],
             "save_wait": 3,
             "is_headless": True
         }
@@ -76,14 +78,25 @@ def find_pos(browser, user_name, keyboard_wait):
     while browser.find_element(By.ID, 'alloy-simple-text-editor').text != user_name:
         browser.find_element(By.XPATH, '//*[@id="canvasContainer"]/div[1]/div[2]').send_keys(Keys.TAB)
         sleep(keyboard_wait)
-    # 向下寻找未被填写位置
-    while browser.find_element(By.ID, 'alloy-simple-text-editor').text != "":
-        browser.find_element(By.XPATH, '//*[@id="canvasContainer"]/div[1]/div[2]').send_keys(Keys.ENTER)
-        sleep(keyboard_wait)
-def fill_sheet(browser, fill_once, temp_list, keyboard_wait):
-    for i in range(fill_once):
-        browser.find_element(By.ID, 'alloy-rich-text-editor').send_keys(str(choice(temp_list)))
-        sleep(keyboard_wait)
+
+def count_dis(start_time, day_div):
+    # 计算需要填写几行
+    dis = (date.today() - date(date.today().year, start_time[0], start_time[1])).days * 3
+    dth = datetime.now().hour
+    if dth < day_div[0]:
+        s = 0
+    elif dth < day_div[1]:
+        s = 1
+    else:
+        s = 2
+    dis += s - start_time[2]
+    return dis if dis>0 else 0
+    
+def fill_sheet(browser, fill_dis, temp_list, keyboard_wait):
+    for i in range(fill_dis+1):
+        if browser.find_element(By.ID, 'alloy-simple-text-editor').text == '':
+            browser.find_element(By.ID, 'alloy-rich-text-editor').send_keys(str(choice(temp_list)))
+            sleep(keyboard_wait)
         browser.find_element(By.ID, 'alloy-rich-text-editor').send_keys(Keys.ENTER)
         sleep(keyboard_wait)
 
@@ -103,8 +116,11 @@ if __name__ == '__main__':
     # 调整位置
     find_pos(browser, setting["user_name"], setting["keyboard_wait"])
     print("已定位起始位置")
+    # 计算需填写行数
+    dis = count_dis(setting['start_time'])
+    print("需向下填写到"+str(dis)+'行')
     # 输出温度
-    fill_sheet(browser, setting["fill_once"], float_range(setting["temp_set"]["min"], setting["temp_set"]["max"], setting["temp_set"]["step"]), setting["keyboard_wait"])
+    fill_sheet(browser, dis, float_range(setting["temp_set"]["min"], setting["temp_set"]["max"], setting["temp_set"]["step"]), setting["keyboard_wait"])
     print("温度填写完毕")
     sleep(setting["save_wait"])
     browser.close()
