@@ -89,11 +89,13 @@ def count_dis(start_time, day_div):
         s = 1
     else:
         s = 2
-    dis += s - start_time[2]
+    dis += s - start_time[2] + 1
     return dis if dis>0 else 0
     
 def fill_sheet(browser, fill_dis, temp_list, keyboard_wait):
-    for i in range(fill_dis+1):
+    browser.find_element(By.ID, 'alloy-rich-text-editor').send_keys(Keys.ENTER)
+    sleep(keyboard_wait)
+    for i in range(fill_dis):
         if browser.find_element(By.ID, 'alloy-simple-text-editor').text == '':
             browser.find_element(By.ID, 'alloy-rich-text-editor').send_keys(str(choice(temp_list)))
             sleep(keyboard_wait)
@@ -117,7 +119,7 @@ if __name__ == '__main__':
     find_pos(browser, setting["user_name"], setting["keyboard_wait"])
     print("已定位起始位置")
     # 计算需填写行数
-    dis = count_dis(setting['start_time'])
+    dis = count_dis(setting['start_time'], setting["day_div"])
     print("需向下填写到"+str(dis)+'行')
     # 输出温度
     fill_sheet(browser, dis, float_range(setting["temp_set"]["min"], setting["temp_set"]["max"], setting["temp_set"]["step"]), setting["keyboard_wait"])
